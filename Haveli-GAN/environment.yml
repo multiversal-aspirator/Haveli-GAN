@@ -1,0 +1,16 @@
+name: haveli-gan
+channels:
+  - pytorch
+  - nvidia
+  - defaults
+dependencies:
+  - python=3.10
+  - pytorch>=2.5.0
+  - torchvision>=0.20.0
+  - torchaudio>=2.5.0
+  - pytorch-cuda=12.1
+  - pip
+  - pip:
+    - tqdm>=4.65.0
+    - Pillow>=10.0.0
+
