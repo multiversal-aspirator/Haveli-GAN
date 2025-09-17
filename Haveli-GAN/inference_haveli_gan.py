@@ -63,25 +63,61 @@ class HaveliGANInference:
         
         # Define image transforms
         self.transform = transforms.Compose([
-            transforms.Resize((512, 512)),
+            transforms.Resize((256, 256)),  # Changed from 512 to 256 for consistency
             transforms.ToTensor(),
             transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
+        ])
+        
+        self.mask_transform = transforms.Compose([
+            transforms.Resize((256, 256)),
+            transforms.ToTensor()
         ])
         
         self.to_pil = transforms.ToPILImage()
         
     def find_latest_checkpoint(self):
         """Find the latest checkpoint in the checkpoints directory."""
-        checkpoint_dir = "./checkpoints"
-        if not os.path.exists(checkpoint_dir):
-            raise FileNotFoundError("No checkpoints directory found!")
+        # Get the directory where this script is located
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        checkpoint_dir = os.path.join(script_dir, "checkpoints")
         
+        if not os.path.exists(checkpoint_dir):
+            raise FileNotFoundError(f"No checkpoints directory found at: {checkpoint_dir}")
+        
+        # Look for checkpoint files with the correct naming pattern
         checkpoints = glob.glob(os.path.join(checkpoint_dir, "checkpoint_epoch_*.pth"))
         if not checkpoints:
-            raise FileNotFoundError("No checkpoint files found!")
+            # Try alternative patterns
+            checkpoints = glob.glob(os.path.join(checkpoint_dir, "gen_epoch_*.pth"))
+            if checkpoints:
+                # Legacy format - we need both generator and style encoder
+                latest_gen = max(checkpoints, key=lambda x: int(x.split('_')[-1].split('.')[0]))
+                epoch_num = latest_gen.split('_')[-1].split('.')[0]
+                style_checkpoint = os.path.join(checkpoint_dir, f"style_enc_epoch_{epoch_num}.pth")
+                if os.path.exists(style_checkpoint):
+                    print(f"Found legacy checkpoints: {latest_gen} and {style_checkpoint}")
+                    return latest_gen  # We'll handle this specially in load_checkpoint
+                else:
+                    raise FileNotFoundError("Style encoder checkpoint not found for legacy format!")
+            else:
+                raise FileNotFoundError(f"No checkpoint files found in: {checkpoint_dir}")
         
         # Sort by epoch number
-        checkpoints.sort(key=lambda x: int(x.split('_')[-1].split('.')[0]))
+        def extract_epoch(checkpoint_path):
+            # Extract epoch number, handling milestone files
+            filename = os.path.basename(checkpoint_path)
+            # Split by '_' and find the part with epoch number
+            parts = filename.split('_')
+            for i, part in enumerate(parts):
+                if part == 'epoch' and i + 1 < len(parts):
+                    epoch_part = parts[i + 1]
+                    # Handle milestone files: "200_milestone.pth" -> "200"
+                    epoch_num = epoch_part.split('.')[0]
+                    if epoch_num != 'milestone':
+                        return int(epoch_num)
+            return 0  # fallback
+        
+        checkpoints.sort(key=extract_epoch)
         latest_checkpoint = checkpoints[-1]
         print(f"Using latest checkpoint: {latest_checkpoint}")
         return latest_checkpoint
@@ -92,13 +128,35 @@ class HaveliGANInference:
             raise FileNotFoundError(f"Checkpoint not found: {checkpoint_path}")
         
         print(f"Loading checkpoint from: {checkpoint_path}")
-        checkpoint = torch.load(checkpoint_path, map_location=self.device)
         
-        self.generator.load_state_dict(checkpoint['gen_state_dict'])
-        self.style_encoder.load_state_dict(checkpoint['style_enc_state_dict'])
-        
-        epoch = checkpoint.get('epoch', 'unknown')
-        print(f"Loaded model from epoch: {epoch}")
+        # Check if this is a legacy checkpoint (separate files)
+        if "gen_epoch_" in checkpoint_path:
+            # Legacy format - load generator and style encoder separately
+            gen_checkpoint = torch.load(checkpoint_path, map_location=self.device, weights_only=False)
+            self.generator.load_state_dict(gen_checkpoint)
+            
+            # Find corresponding style encoder checkpoint
+            epoch_num = checkpoint_path.split('_')[-1].split('.')[0]
+            style_checkpoint_path = os.path.join(os.path.dirname(checkpoint_path), f"style_enc_epoch_{epoch_num}.pth")
+            style_checkpoint = torch.load(style_checkpoint_path, map_location=self.device, weights_only=False)
+            self.style_encoder.load_state_dict(style_checkpoint)
+            
+            print(f"Loaded legacy format models from epoch: {epoch_num}")
+        else:
+            # New unified format
+            checkpoint = torch.load(checkpoint_path, map_location=self.device, weights_only=False)
+            
+            # Handle different checkpoint formats
+            if 'gen_state_dict' in checkpoint:
+                self.generator.load_state_dict(checkpoint['gen_state_dict'])
+                self.style_encoder.load_state_dict(checkpoint['style_enc_state_dict'])
+            else:
+                # Alternative format
+                self.generator.load_state_dict(checkpoint['generator'])
+                self.style_encoder.load_state_dict(checkpoint['style_encoder'])
+            
+            epoch = checkpoint.get('epoch', 'unknown')
+            print(f"Loaded model from epoch: {epoch}")
     
     def load_image(self, image_path):
         """Load and preprocess an image."""
@@ -108,8 +166,7 @@ class HaveliGANInference:
     def load_mask(self, mask_path):
         """Load and preprocess a mask."""
         mask = Image.open(mask_path).convert('L')
-        mask = mask.resize((512, 512))
-        mask = transforms.ToTensor()(mask).unsqueeze(0).to(self.device)
+        mask = self.mask_transform(mask).unsqueeze(0).to(self.device)
         return mask
     
     def generate_automatic_mask(self, damaged_image_tensor):

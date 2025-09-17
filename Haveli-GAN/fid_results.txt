@@ -1,0 +1,2 @@
+FID Score: 10.419762
+Number of images: 50

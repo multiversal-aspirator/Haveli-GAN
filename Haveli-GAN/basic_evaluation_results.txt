@@ -1,0 +1,22 @@
+HAVELI-GAN BASIC EVALUATION RESULTS
+=============================================
+
+MSE:
+  Mean: 0.006812
+  Std:  0.004348
+
+L1:
+  Mean: 0.046848
+  Std:  0.013959
+
+PSNR:
+  Mean: 28.490573
+  Std:  2.634986
+
+SSIM:
+  Mean: 0.926870
+  Std:  0.036160
+
+Perceptual_Loss:
+  Mean: 0.775016
+  Std:  0.160709
