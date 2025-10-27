@@ -6,3 +6,16 @@
 /Haveli-GAN/batch_restorations
 /Haveli-GAN/batch_test
 /Haveli-GAN/__pycache__
+/Haveli-GAN/*.pth
+/Haveli-GAN/**/*.pth
+/Haveli-GAN/sequential_checkpoints_1epoch
+/Haveli-GAN/sequential_checkpoints_200epochs
+/Haveli-GAN/interactive_results
+/Haveli-GAN/edgeconnect_interactive_results
+/Haveli-GAN/mat_interactive_results
+/Haveli-GAN/partialconv_interactive_results
+/Haveli-GAN/inference_results
+/Haveli-GAN/evaluation_results
+/Haveli-GAN/comparison_outputs
+/Haveli-GAN/demo_restoration
+/Haveli-GAN/browse_results
