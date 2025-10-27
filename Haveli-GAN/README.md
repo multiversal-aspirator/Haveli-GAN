@@ -283,3 +283,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ---
 
 **Note**: This system is designed for cultural heritage preservation and should be used respectfully with appropriate permissions when working with historical artwork.
+

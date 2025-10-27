@@ -1,7 +1,7 @@
 HAVELI-GAN BASIC EVALUATION RESULTS
 =============================================
 
-MSE:
+MSE: Mean Square Error
   Mean: 0.006812
   Std:  0.004348
 
@@ -9,14 +9,17 @@ L1:
   Mean: 0.046848
   Std:  0.013959
 
-PSNR:
+PSNR: Peak Signa to Noise Ratio
   Mean: 28.490573
   Std:  2.634986
 
-SSIM:
+SSIM: Structural Similarity index
   Mean: 0.926870
   Std:  0.036160
 
 Perceptual_Loss:
   Mean: 0.775016
   Std:  0.160709
+
+FID Score: 10.419762
+  Number of images: 50

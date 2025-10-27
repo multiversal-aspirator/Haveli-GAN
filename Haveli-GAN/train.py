@@ -23,7 +23,7 @@ LEARNING_RATE_G = 1e-4  # Reduced learning rate for stability
 LEARNING_RATE_D = 1e-4  # Reduced learning rate for stability
 BATCH_SIZE = 2  # Reduced batch size to avoid memory issues
 IMAGE_SIZE = 256
-NUM_EPOCHS = 200  # Extended training for better convergence
+NUM_EPOCHS = 1  # Single epoch for testing
 LAMBDA_ADV = 1
 LAMBDA_L1 = 100
 LAMBDA_PERC = 10
@@ -217,7 +217,7 @@ for epoch in range(NUM_EPOCHS):
         )
 
     # Save samples and checkpoints
-    if (epoch + 1) % 5 == 0:
+    if (epoch + 1) % 5 == 0 or (epoch + 1) == 1:  # Save every 5 epochs or after epoch 1
         save_image(fake * 0.5 + 0.5, f"{OUTPUT_DIR}/sample_{epoch+1}.png")
         torch.save(gen.state_dict(), f"{CHECKPOINT_DIR}/gen_epoch_{epoch+1}.pth")
         torch.save(style_enc.state_dict(), f"{CHECKPOINT_DIR}/style_enc_epoch_{epoch+1}.pth")

@@ -7,7 +7,12 @@ from torchvision.models import vgg19
 class VGGPerceptualLoss(nn.Module):
     def __init__(self):
         super(VGGPerceptualLoss, self).__init__()
-        vgg = vgg19(weights='VGG19_Weights.IMAGENET1K_V1').features
+        try:
+            vgg = vgg19(weights='VGG19_Weights.IMAGENET1K_V1').features
+        except:
+            # Fallback to VGG without pretrained weights if download fails
+            print("⚠️ Warning: Could not download VGG19 weights, using untrained VGG19")
+            vgg = vgg19(weights=None).features
         
         # Select layers for perceptual and style loss
         self.perceptual_layers = ['21'] # relu4_2

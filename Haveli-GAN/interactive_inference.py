@@ -19,8 +19,8 @@ class InteractiveInference:
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         print(f"🚀 Using device: {self.device}")
         
-        # Load models
-        self.load_models()
+        # Load MAT model
+        self.load_model()
         
         # Setup transforms
         self.transform = transforms.Compose([
@@ -260,7 +260,7 @@ def main():
     """Main function"""
     try:
         runner = InteractiveInference()
-        runner.run_batch_inference()
+        runner.run_interactive_session()
     except KeyboardInterrupt:
         print("\n\n👋 Session interrupted by user. Goodbye!")
     except Exception as e:
